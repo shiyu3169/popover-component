@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { getPopoverCoords } from '../utils/getPopoverCoords'
 
 /* 
 1. Popover - holds the state and methods, then expose it though context 
@@ -22,18 +23,19 @@ import {
 /*                                    Types                                   */
 /* -------------------------------------------------------------------------- */
 // TODO: More positions can be added here
-type Position = 'bottom-center' | 'bottom-left' | 'bottom-right'
-type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>
+export type Position = 'bottom-center' | 'bottom-left' | 'bottom-right'
+export type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>
 
+/* -------------------------------------------------------------------------- */
+/*                                 Components                                 */
+/* -------------------------------------------------------------------------- */
 const defaultRect = {
   left: 0,
   top: 0,
   width: 0,
   height: 0,
 }
-/* -------------------------------------------------------------------------- */
-/*                                 Components                                 */
-/* -------------------------------------------------------------------------- */
+
 const PopoverContext = createContext<{
   isShow: boolean
   setIsShow: Dispatch<SetStateAction<boolean>>
@@ -77,6 +79,8 @@ const Popover = ({
   )
 }
 
+/* --------------------------------- Trigger -------------------------------- */
+
 const Trigger = ({ children }: { children: ReactElement }) => {
   const { setIsShow, setTriggerRect } = useContext(PopoverContext)
   const onClick = () => {
@@ -98,6 +102,8 @@ const Trigger = ({ children }: { children: ReactElement }) => {
   return childrenToTriggerPopover
 }
 
+/* --------------------------------- Content -------------------------------- */
+
 const Content = ({ children }: { children: ReactNode }) => {
   const { isShow } = useContext(PopoverContext)
   if (!isShow) {
@@ -117,6 +123,9 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
     const coords = getPopoverCoords(triggerRect, rect, preferredPosition)
     setCoords(coords)
   }, [preferredPosition, triggerRect])
+
+  const refFocusTrapping = useFocusTrapping()
+
   return (
     <dialog
       ref={ref}
@@ -133,6 +142,8 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
   )
 }
 
+/* ---------------------------------- Close --------------------------------- */
+
 const Close = ({ children }: { children: ReactElement }) => {
   const { setIsShow } = useContext(PopoverContext)
   const onClick = () => {
@@ -147,34 +158,4 @@ const Close = ({ children }: { children: ReactElement }) => {
 Popover.Trigger = Trigger
 Popover.Content = Content
 Popover.Close = Close
-
-/* -------------------------------------------------------------------------- */
-/*                              Utility Functions                             */
-/* -------------------------------------------------------------------------- */
-
-function getPopoverCoords(
-  triggerRect: Rect,
-  popoverRect: Rect,
-  position: Position,
-) {
-  switch (position) {
-    case 'bottom-center':
-    default:
-      // TODO: cover all postions
-      let top = triggerRect.top + triggerRect.height + 10
-      let left = Math.max(
-        triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2,
-        10,
-      )
-      // failover to top if there is not enough space
-      if (top + popoverRect.height > window.innerHeight - 10) {
-        top = triggerRect.top - 10 - popoverRect.height
-      }
-      return {
-        top,
-        left,
-      }
-  }
-}
-
 export default Popover

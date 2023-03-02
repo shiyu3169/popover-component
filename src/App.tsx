@@ -1,4 +1,4 @@
-import Popover from './Popover'
+import Popover from './components/Popover'
 
 function App() {
   return (
