@@ -1,4 +1,4 @@
-import { Position, Rect } from '../components/Popover'
+import { Position, Rect } from '../providers/PopoverProvider'
 
 export function getPopoverCoords(
   triggerRect: Rect,
@@ -8,7 +8,7 @@ export function getPopoverCoords(
   switch (position) {
     case 'bottom-center':
     default:
-      // TODO: cover all postions
+      // TODO: cover all positions
       let top = triggerRect.top + triggerRect.height + 10
       let left = Math.max(
         triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2,

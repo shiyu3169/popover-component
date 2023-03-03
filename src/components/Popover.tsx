@@ -1,15 +1,16 @@
 import {
   cloneElement,
-  createContext,
-  Dispatch,
   ReactElement,
   ReactNode,
-  SetStateAction,
-  useContext,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react'
+import { useFocusTrapping } from '../hooks/useFocusTrapping'
+import PopoverProvider, {
+  Position,
+  usePopoverContext,
+} from '../providers/PopoverProvider'
 import { getPopoverCoords } from '../utils/getPopoverCoords'
 
 /* 
@@ -19,43 +20,6 @@ import { getPopoverCoords } from '../utils/getPopoverCoords'
 4. Close - attach the close method to children
 */
 
-/* -------------------------------------------------------------------------- */
-/*                                    Types                                   */
-/* -------------------------------------------------------------------------- */
-// TODO: More positions can be added here
-export type Position = 'bottom-center' | 'bottom-left' | 'bottom-right'
-export type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>
-
-/* -------------------------------------------------------------------------- */
-/*                                 Components                                 */
-/* -------------------------------------------------------------------------- */
-const defaultRect = {
-  left: 0,
-  top: 0,
-  width: 0,
-  height: 0,
-}
-
-const PopoverContext = createContext<{
-  isShow: boolean
-  setIsShow: Dispatch<SetStateAction<boolean>>
-  preferredPosition: Position
-  triggerRect: Rect
-  setTriggerRect: Dispatch<SetStateAction<Rect>>
-}>({
-  isShow: false,
-  setIsShow: () => {
-    throw new Error('PopoverCOntext setIsShow should be used under provider')
-  },
-  preferredPosition: 'bottom-center',
-  triggerRect: defaultRect,
-  setTriggerRect: () => {
-    throw new Error(
-      'PopoverContext setTriggerRect should be used under provider',
-    )
-  },
-})
-
 const Popover = ({
   children,
   preferredPosition = 'bottom-center',
@@ -63,26 +27,17 @@ const Popover = ({
   children: ReactNode
   preferredPosition?: Position
 }) => {
-  const [isShow, setIsShow] = useState(false)
-  const [triggerRect, setTriggerRect] = useState(defaultRect)
-  const contextValue = {
-    isShow,
-    setIsShow,
-    preferredPosition,
-    triggerRect,
-    setTriggerRect,
-  }
   return (
-    <PopoverContext.Provider value={contextValue}>
+    <PopoverProvider preferredPosition={preferredPosition}>
       {children}
-    </PopoverContext.Provider>
+    </PopoverProvider>
   )
 }
 
 /* --------------------------------- Trigger -------------------------------- */
 
 const Trigger = ({ children }: { children: ReactElement }) => {
-  const { setIsShow, setTriggerRect } = useContext(PopoverContext)
+  const { setIsShow, setTriggerRect } = usePopoverContext()
   const onClick = () => {
     const element = ref.current
     if (!element) {
@@ -105,7 +60,7 @@ const Trigger = ({ children }: { children: ReactElement }) => {
 /* --------------------------------- Content -------------------------------- */
 
 const Content = ({ children }: { children: ReactNode }) => {
-  const { isShow } = useContext(PopoverContext)
+  const { isShow } = usePopoverContext()
   if (!isShow) {
     return null
   }
@@ -113,7 +68,7 @@ const Content = ({ children }: { children: ReactNode }) => {
 }
 
 const ContentInternal = ({ children }: { children: ReactNode }) => {
-  const { triggerRect, preferredPosition } = useContext(PopoverContext)
+  const { triggerRect, preferredPosition } = usePopoverContext()
   const [coords, setCoords] = useState({ left: 0, top: 0 })
   const ref = useRef<HTMLDialogElement>(null)
   useLayoutEffect(() => {
@@ -145,7 +100,7 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
 /* ---------------------------------- Close --------------------------------- */
 
 const Close = ({ children }: { children: ReactElement }) => {
-  const { setIsShow } = useContext(PopoverContext)
+  const { setIsShow } = usePopoverContext()
   const onClick = () => {
     setIsShow(false)
   }
