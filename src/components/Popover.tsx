@@ -2,11 +2,12 @@ import {
   cloneElement,
   ReactElement,
   ReactNode,
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react'
-import { useFocusTrapping } from '../hooks/useFocusTrapping'
+import { useClickOutside, useFocusTrapping } from '../hooks'
 import PopoverProvider, {
   Position,
   usePopoverContext,
@@ -38,7 +39,7 @@ const Popover = ({
 
 const Trigger = ({ children }: { children: ReactElement }) => {
   const { setIsShow, setTriggerRect } = usePopoverContext()
-  const onClick = () => {
+  const onClick = (e: MouseEvent) => {
     const element = ref.current
     if (!element) {
       return
@@ -68,7 +69,7 @@ const Content = ({ children }: { children: ReactNode }) => {
 }
 
 const ContentInternal = ({ children }: { children: ReactNode }) => {
-  const { triggerRect, preferredPosition } = usePopoverContext()
+  const { triggerRect, preferredPosition, setIsShow } = usePopoverContext()
   const [coords, setCoords] = useState({ left: 0, top: 0 })
   const ref = useRef<HTMLDialogElement>(null)
   useLayoutEffect(() => {
@@ -80,10 +81,15 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
   }, [preferredPosition, triggerRect])
 
   const refFocusTrapping = useFocusTrapping()
+  const dismiss = useCallback(() => {
+    setIsShow(false)
+  }, [setIsShow])
+  const refClickOutside = useClickOutside(dismiss)
 
   const mergedRef = mergeRef(
     ref,
     refFocusTrapping,
+    refClickOutside,
   ) as unknown as React.RefObject<HTMLDialogElement>
   return (
     <dialog
@@ -105,8 +111,9 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
 
 const Close = ({ children }: { children: ReactElement }) => {
   const { setIsShow } = usePopoverContext()
-  const onClick = () => {
+  const onClick = (e: MouseEvent) => {
     setIsShow(false)
+    e.stopPropagation()
   }
   const childrenToClosePopover = cloneElement(children, {
     onClick, // TODO: Ideally, we should merge the existing onClick with this.

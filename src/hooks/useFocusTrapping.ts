@@ -9,6 +9,8 @@ const focusableQuery = ':is(input, button, [tab-index])'
 */
 
 export function useFocusTrapping() {
+  // @ts-ignore, TODO: fix typing
+  const refTrigger = useRef<HTMLElement>(document.activeElement)
   const ref = useRef<HTMLElement>(null)
 
   const tabNext = useCallback((e: KeyboardEvent) => {
@@ -42,6 +44,14 @@ export function useFocusTrapping() {
     document.addEventListener('keydown', tabNext)
     return () => {
       document.removeEventListener('keydown', tabNext)
+      // 3. refocus the trigger after dismissing
+      const trigger = refTrigger.current
+      const currentActiveElement = document.activeElement
+      // The current active element will be reset to body if not another trigger is clicked
+      // TODO: this is tricky and can cause bug.
+      if (currentActiveElement === document.body) {
+        trigger?.focus()
+      }
     }
   }, [tabNext])
   return ref
