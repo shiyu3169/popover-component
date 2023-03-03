@@ -1,15 +1,13 @@
-type Mutable<T> = {
-  -readonly [k in keyof T]: T[k]
-}
-
-export const mergeRef =
-  <T>(...refs: React.Ref<T>[]) =>
-  (value: T): void => {
-    for (const ref of refs) {
+export function mergeRef<T = any>(
+  ...refs: (React.Ref<T> | undefined)[]
+): React.RefCallback<T> {
+  return (value: T) => {
+    refs.forEach((ref) => {
       if (typeof ref === 'function') {
         ref(value)
-      } else if (ref) {
-        ;(ref as Mutable<React.RefObject<T>>).current = value
+      } else if (ref != null) {
+        ;(ref as React.MutableRefObject<T>).current = value
       }
-    }
+    })
   }
+}

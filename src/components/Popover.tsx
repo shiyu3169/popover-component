@@ -86,11 +86,7 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
   }, [setIsShow])
   const refClickOutside = useClickOutside(dismiss)
 
-  const mergedRef = mergeRef(
-    ref,
-    refFocusTrapping,
-    refClickOutside,
-  ) as unknown as React.RefObject<HTMLDialogElement>
+  const mergedRef = mergeRef(ref, refFocusTrapping, refClickOutside)
   return (
     <dialog
       ref={mergedRef}
