@@ -11,7 +11,7 @@ import PopoverProvider, {
   Position,
   usePopoverContext,
 } from '../providers/PopoverProvider'
-import { getPopoverCoords } from '../utils/getPopoverCoords'
+import { getPopoverCoords, mergeRef } from '../utils'
 
 /* 
 1. Popover - holds the state and methods, then expose it though context 
@@ -81,9 +81,13 @@ const ContentInternal = ({ children }: { children: ReactNode }) => {
 
   const refFocusTrapping = useFocusTrapping()
 
+  const mergedRef = mergeRef(
+    ref,
+    refFocusTrapping,
+  ) as unknown as React.RefObject<HTMLDialogElement>
   return (
     <dialog
-      ref={ref}
+      ref={mergedRef}
       open
       style={{
         margin: 0,
